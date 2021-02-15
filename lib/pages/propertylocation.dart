@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
-//new import
+//data model import
 import '../models/municipalityModel.dart';
+import '../models/nahiaModel.dart';
+
 import '../models/localpropertydata.dart';
 import '../utils/appstate.dart';
 import '../localization/app_translations.dart';
@@ -25,6 +27,7 @@ class PropertyLocationPage extends StatefulWidget {
 
 class _PropertyLocationPageState extends State<PropertyLocationPage> {
   LocalPropertySurvey localdata;
+  List tempNahiaList = ['1', '2', '3'];
   List nahiaList = [];
   //province list
   List provinceList = [];
@@ -33,35 +36,6 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
   bool gozarview = false;
   bool _prograssbar = true;
   var _formkey = GlobalKey<FormState>();
-
-  void _nahiaListAPI(String id) async {
-    final jobsListAPIUrl =
-        'https://apisapi.afghanhabitat.org/mNahiasBySurveyorId?id=${localdata.first_surveyor_name}';
-    final response = await http.get(jobsListAPIUrl);
-
-    if (response.statusCode == 200) {
-      final data1 = json.decode(response.body);
-
-      if (data1["data"] is String) {
-        setState(() {
-          nahiaList.add(data1["data"].toString());
-          _prograssbar = false;
-        });
-      } else {
-        setState(() {
-          nahiaList = data1["data"];
-
-          _prograssbar = false;
-        });
-      }
-      print(
-          "nahia ========== ${data1["data"]},${localdata.taskid},${localdata.first_surveyor_name}");
-
-      if (nahiaList.length != 0) {}
-    } else {
-      throw Exception('Failed to load jobs from API');
-    }
-  }
 
 //province list
   void _provinceListAPI(String id) async {
@@ -110,7 +84,7 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
       var city = cityValues[0].value;
       if (city is String) {
         setState(() {
-          municipalityList.add(getCity(city));
+          municipalityList.add(city);
 
           _prograssbar = false;
         });
@@ -123,6 +97,40 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
           "municipality ========== ${responseJson["data"]},${localdata.taskid},${localdata.first_surveyor_name}");
       print('municipality = $municipalityList');
       if (municipalityList.length != 0) {}
+    } else {
+      throw Exception('Failed to load jobs from API');
+    }
+  }
+
+  void _nahiaListAPI(String municipalityId) async {
+    final jobsListAPIUrl =
+        'https://apisapi.afghanhabitat.org/mNahia?municipality_value=$municipalityId';
+    final response = await http.get(jobsListAPIUrl);
+
+    if (response.statusCode == 200) {
+      final responseJson = json.decode(response.body);
+      var nahiaData = Nahia.fromJson(responseJson);
+      var areaValues = nahiaData.data;
+      for (int i = 1; i < areaValues.length; i++) {
+        print(areaValues[i].value.toString());
+        var area = areaValues[i].value;
+        if (area is String) {
+          setState(() {
+            nahiaList.add(area);
+
+            _prograssbar = false;
+          });
+        } else {
+          setState(() {
+            _prograssbar = false;
+          });
+        }
+      }
+      print('nahia = $nahiaList');
+
+//print("nahia ========== ${data1["data"]},${localdata.taskid},${localdata.first_surveyor_name}");
+
+      if (nahiaList.length != 0) {}
     } else {
       throw Exception('Failed to load jobs from API');
     }
@@ -420,7 +428,7 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
 
     print("initdata, ${localdata.first_surveyor_name}");
     _provinceListAPI(localdata.first_surveyor_name);
-    _nahiaListAPI(localdata.first_surveyor_name);
+    //_nahiaListAPI(localdata.first_surveyor_name);
 
     // _gozarListAPI();
     super.initState();
@@ -480,7 +488,6 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
                                       },
                                       onChanged: (value) {
                                         localdata.province = value.trim();
-
                                         _municipalityListAPI(value);
                                         setState(() {});
                                       },
@@ -518,10 +525,10 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
                                               : CheckColor.Green,
                                     ),*/
 
-                                   //municipality dropdown
+                                    //municipality dropdown
                                     formTextField6(
                                       enable: false,
-                                      fieldrequired: true, 
+                                      fieldrequired: true,
                                       surveyList: municipalityList,
                                       headerlablekey:
                                           setapptext(key: 'key_select_city'),
@@ -534,14 +541,42 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
                                       textInputAction: TextInputAction.done,
                                       onFieldSubmitted: (_) {},
                                       onSaved: (value) {
-                                       },
+                                        localdata.city = value.trim();
+                                        _nahiaListAPI(value);
+                                      },
                                       onChanged: (value) {
+                                        localdata.city = value.trim();
+                                        _nahiaListAPI(value);
                                         setState(() {});
                                       },
                                     ), //municipality dropdown end
 
                                     //district/nahia
-                                    formcardtextfield2(
+                                    //nahia drop down
+                                    formTextField7(
+                                      enable: false,
+                                      fieldrequired: true,
+                                      surveyList: nahiaList,
+                                      headerlablekey:
+                                          setapptext(key: 'key_area'),
+                                      radiovalue:
+                                          localdata.area?.isEmpty ?? true
+                                              ? CheckColor.Black
+                                              : CheckColor.Green,
+                                      hinttextkey: setapptext(key: 'key_area'),
+                                      textInputAction: TextInputAction.done,
+                                      onFieldSubmitted: (_) {},
+                                      onSaved: (value) {
+                                        localdata.area = value.trim();},
+                                      onChanged: (value) {
+                                        
+                                        localdata.area= value.trim();
+                                        setState(() {});
+                                      },
+                                    ),
+
+                                    //nahia original code
+                                    /*         formcardtextfield2(
                                       surveyList: nahiaList,
                                       enable: false,
                                       keyboardtype: TextInputType.number,
@@ -580,7 +615,7 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
                                           // _prograssbar = true;
                                         });
                                       },
-                                    ),
+                                    ),*/
                                     //ctu/gozar
                                     formcardtextfield4(
                                         surveyList:
