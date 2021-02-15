@@ -74,7 +74,7 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
 
       if (data1["data"] is String) {
         setState(() {
-          provinceList.add(getProvincename(data1["data"].toString()));
+          provinceList.add(data1["data"].toString());
           _prograssbar = false;
         });
       } else {
@@ -94,9 +94,9 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
   }
 
   //municipality list
-  _municipalityListAPI() async {
+  _municipalityListAPI(String provinceId) async {
     final jobsListAPIUrl =
-        'https://apisapi.afghanhabitat.org/mMunicipality?province_value=01-01';
+        'https://apisapi.afghanhabitat.org/mMunicipality?province_value=$provinceId';
 
     final response = await http.get(jobsListAPIUrl);
     print(response.statusCode.toString());
@@ -476,12 +476,12 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
                                       onFieldSubmitted: (_) {},
                                       onSaved: (value) {
                                         localdata.province = value.trim();
-                                        _municipalityListAPI();
+                                        _municipalityListAPI(value);
                                       },
                                       onChanged: (value) {
                                         localdata.province = value.trim();
 
-                                        _municipalityListAPI();
+                                        _municipalityListAPI(value);
                                         setState(() {});
                                       },
                                     ), // end
