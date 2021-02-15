@@ -298,7 +298,7 @@ class _SurveyInfoPageState extends State<SurveyInfoPage> {
       appBar: AppBar(
         backgroundColor: Colors.blue,
         title: Text(
-          setapptext(key: 'key_property_survey'),
+          setapptext(key: 'key_property_surveyor'),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -638,7 +638,7 @@ class _SurveyInfoPageState extends State<SurveyInfoPage> {
                                     localdata.technical_support_name =
                                         value.trim();
                                     setState(() {});
-                                  }),
+                                  },),
                             ],
                           ),
                         ),

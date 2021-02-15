@@ -627,6 +627,7 @@ Widget formcardtextfield4(
     ),
   );
 }
+
 Widget formcardtextfield2(
     {TextInputType keyboardtype,
     String initvalue,
@@ -736,6 +737,101 @@ Widget formcardtextfield2(
               //   maxLengthEnforced: true,
               //   ///WhitelistingTextInputFormatter.digitsOnly
               // ),
+            )
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+// for province 
+Widget formTextField6(
+    {TextInputType keyboardtype,
+    String headerlablekey,
+    CheckColor radiovalue,
+    String hinttextkey,
+    Function(String) onSaved,
+    Function(String) validator,
+    Function(String) onChanged,
+    FocusNode fieldfocus,
+    TextInputAction textInputAction,
+    void Function(String) onFieldSubmitted,
+    Widget suffix,
+    bool enable,
+    int maxLength,
+    List<TextInputFormatter> inputFormatters,
+    List surveyList,
+    String value,
+    bool fieldrequired = false}) {
+  
+  return Container(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(10),
+    ),
+    padding: EdgeInsets.all(10),
+    child: Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Color.fromRGBO(176, 174, 171, 1), width: 1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              textDirection: locator<LanguageService>().currentlanguage == 0
+                  ? TextDirection.ltr
+                  : TextDirection.rtl,
+              children: <Widget>[
+                completedcheckbox(isCompleted: radiovalue),
+                fieldrequired
+                    ? Text(
+                        '*',
+                        style: TextStyle(color: Colors.red, fontSize: 18),
+                      )
+                    : SizedBox(),
+                Flexible(
+                  child: Container(
+                    child: Text(
+                      headerlablekey,
+                      overflow: TextOverflow.visible,
+                      softWrap: true,
+                      style: TextStyle(),
+                      textDirection:
+                          locator<LanguageService>().currentlanguage == 0
+                              ? TextDirection.ltr
+                              : TextDirection.rtl,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8, right: 8, bottom: 10),
+              child: DropdownButtonFormField<String>(
+                hint: new Text(hinttextkey),
+                items: surveyList.map((item) {
+                  return DropdownMenuItem<String>(
+                    value: item,
+                    child: Container(
+                      alignment: locator<LanguageService>().currentlanguage == 0
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
+                      child: Text(
+                        item,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                // validator: validate,
+                onChanged: onChanged,
+                onSaved: onSaved,
+                value: value,
+              ),
             )
           ],
         ),

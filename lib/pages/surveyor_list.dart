@@ -18,6 +18,7 @@ class _SurveyorList extends State<SurveyoerList> {
   String setapptext({String key}) {
     return AppTranslations.of(context).text(key);
   }
+
   List surveyList;
   bool _prograssbar = true;
   @override
@@ -56,7 +57,7 @@ class _SurveyorList extends State<SurveyoerList> {
         appBar: AppBar(
           backgroundColor: Colors.blue,
           title: Text(
-                                                setapptext(key: 'key_surveyor_list'),
+            setapptext(key: 'key_surveyor_list'),
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
@@ -89,8 +90,8 @@ class _SurveyorList extends State<SurveyoerList> {
                                     style: TextStyle(fontSize: 12.0),
                                   ),
                                   // new Text(
-                                      // "Survey-Emailid:- ${surveyList[index]["email"]}",
-                                      // style: TextStyle(fontSize: 12.0)),
+                                  // "Survey-Emailid:- ${surveyList[index]["email"]}",
+                                  // style: TextStyle(fontSize: 12.0)),
                                 ],
                               ),
                               new RaisedButton(

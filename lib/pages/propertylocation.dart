@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
+//new import
+import '../models/municipalityModel.dart';
 import '../models/localpropertydata.dart';
 import '../utils/appstate.dart';
 import '../localization/app_translations.dart';
@@ -24,14 +26,15 @@ class PropertyLocationPage extends StatefulWidget {
 class _PropertyLocationPageState extends State<PropertyLocationPage> {
   LocalPropertySurvey localdata;
   List nahiaList = [];
-
+  //province list
+  List provinceList = [];
+  List municipalityList = [];
   List gozarList;
   bool gozarview = false;
   bool _prograssbar = true;
   var _formkey = GlobalKey<FormState>();
 
   void _nahiaListAPI(String id) async {
-
     final jobsListAPIUrl =
         'https://apisapi.afghanhabitat.org/mNahiasBySurveyorId?id=${localdata.first_surveyor_name}';
     final response = await http.get(jobsListAPIUrl);
@@ -39,20 +42,87 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
     if (response.statusCode == 200) {
       final data1 = json.decode(response.body);
 
-       if(data1["data"] is String){
-         setState(() {
-           nahiaList.add(data1["data"].toString());
-           _prograssbar = false;
-         }); 
-       }else{
-         setState(() {
-           nahiaList=data1["data"];;
-           _prograssbar = false;
-         });
-       }
-      print("nahia ========== ${data1["data"]},${localdata.taskid},${localdata.first_surveyor_name}");
-      
+      if (data1["data"] is String) {
+        setState(() {
+          nahiaList.add(data1["data"].toString());
+          _prograssbar = false;
+        });
+      } else {
+        setState(() {
+          nahiaList = data1["data"];
+
+          _prograssbar = false;
+        });
+      }
+      print(
+          "nahia ========== ${data1["data"]},${localdata.taskid},${localdata.first_surveyor_name}");
+
       if (nahiaList.length != 0) {}
+    } else {
+      throw Exception('Failed to load jobs from API');
+    }
+  }
+
+//province list
+  void _provinceListAPI(String id) async {
+    final jobsListAPIUrl =
+        'https://apisapi.afghanhabitat.org/mProvinceBySurveyorId?id=${localdata.first_surveyor_name}';
+    final response = await http.get(jobsListAPIUrl);
+
+    if (response.statusCode == 200) {
+      final data1 = json.decode(response.body);
+
+      if (data1["data"] is String) {
+        setState(() {
+          provinceList.add(getProvincename(data1["data"].toString()));
+          _prograssbar = false;
+        });
+      } else {
+        setState(() {
+          provinceList = data1["data"];
+
+          _prograssbar = false;
+        });
+      }
+      print(
+          "province ========== ${data1["data"]},${localdata.taskid},${localdata.first_surveyor_name}");
+
+      if (provinceList.length != 0) {}
+    } else {
+      throw Exception('Failed to load jobs from API');
+    }
+  }
+
+  //municipality list
+  _municipalityListAPI() async {
+    final jobsListAPIUrl =
+        'https://apisapi.afghanhabitat.org/mMunicipality?province_value=01-01';
+
+    final response = await http.get(jobsListAPIUrl);
+    print(response.statusCode.toString());
+    if (response.statusCode == 200) {
+      final responseJson = json.decode(response.body);
+      print(responseJson["data"].toString());
+      var municipalityData = MunicipalityData.fromJson(responseJson);
+      var cityValues = municipalityData.data;
+      print(cityValues[0].value.toString());
+      //only one jsonObject is present ... so no loop
+      var city = cityValues[0].value;
+      if (city is String) {
+        setState(() {
+          municipalityList.add(getCity(city));
+
+          _prograssbar = false;
+        });
+      } else {
+        setState(() {
+          _prograssbar = false;
+        });
+      }
+      print(
+          "municipality ========== ${responseJson["data"]},${localdata.taskid},${localdata.first_surveyor_name}");
+      print('municipality = $municipalityList');
+      if (municipalityList.length != 0) {}
     } else {
       throw Exception('Failed to load jobs from API');
     }
@@ -60,7 +130,7 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
 
   _gozarListAPI(String nahiaId) async {
     final jobsListAPIUrl =
-        'https://apisapi.afghanhabitat.org/mGozar?nahia_id=${nahiaId}';
+        'https://apisapi.afghanhabitat.org/mGozar?nahia_id=$nahiaId';
     final response = await http.get(jobsListAPIUrl);
     if (response.statusCode == 200) {
       final data1 = json.decode(response.body);
@@ -345,12 +415,13 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
   void initState() {
     localdata = new LocalPropertySurvey();
     localdata = widget.localdata;
-    localdata.province = '01-01';
-    localdata.city = '1';
-    
-    print(
-        "initdata, ${localdata.first_surveyor_name}");
+    //localdata.province = '01-01';
+    //localdata.city = '1';
+
+    print("initdata, ${localdata.first_surveyor_name}");
+    _provinceListAPI(localdata.first_surveyor_name);
     _nahiaListAPI(localdata.first_surveyor_name);
+
     // _gozarListAPI();
     super.initState();
   }
@@ -388,8 +459,35 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
                               Expanded(
                                 child: ListView(
                                   children: <Widget>[
+                                    //province drop down code
+                                    formTextField6(
+                                      enable: false,
+                                      fieldrequired: true,
+                                      surveyList: provinceList,
+                                      headerlablekey:
+                                          setapptext(key: 'key_province'),
+                                      radiovalue:
+                                          localdata.province?.isEmpty ?? true
+                                              ? CheckColor.Black
+                                              : CheckColor.Green,
+                                      hinttextkey:
+                                          setapptext(key: 'key_province'),
+                                      textInputAction: TextInputAction.done,
+                                      onFieldSubmitted: (_) {},
+                                      onSaved: (value) {
+                                        localdata.province = value.trim();
+                                        _municipalityListAPI();
+                                      },
+                                      onChanged: (value) {
+                                        localdata.province = value.trim();
+
+                                        _municipalityListAPI();
+                                        setState(() {});
+                                      },
+                                    ), // end
+
                                     //province
-                                    formcardtextfield(
+                                    /*formcardtextfield(
                                       fieldrequired: true,
                                       enable: false,
                                       initvalue: getProvincename(localdata.province)?.isEmpty ??
@@ -400,23 +498,48 @@ class _PropertyLocationPageState extends State<PropertyLocationPage> {
                                           key: 'key_select_province'),
                                       radiovalue:
                                           localdata.province?.isEmpty ?? true
-                                              ? CheckColor.Black
+                                              ? Chec+kColor.Black
                                               : CheckColor.Green,
-                                    ),
+                                    ),*/
                                     //municipality
-                                    formcardtextfield(
+                                    /*formcardtextfield(
                                       fieldrequired: true,
                                       enable: false,
-                                      initvalue: getCity(localdata.city)?.isEmpty ?? true
-                                          ? ""
-                                          : getCity(localdata.city),
+                                      initvalue:
+                                          getCity(localdata.city)?.isEmpty ??
+                                                  true
+                                              ? ""
+                                              : getCity(localdata.city),
                                       headerlablekey:
                                           setapptext(key: 'key_select_city'),
                                       radiovalue:
                                           localdata.city?.isEmpty ?? true
                                               ? CheckColor.Black
                                               : CheckColor.Green,
-                                    ),
+                                    ),*/
+
+                                   //municipality dropdown
+                                    formTextField6(
+                                      enable: false,
+                                      fieldrequired: true, 
+                                      surveyList: municipalityList,
+                                      headerlablekey:
+                                          setapptext(key: 'key_select_city'),
+                                      radiovalue:
+                                          localdata.city?.isEmpty ?? true
+                                              ? CheckColor.Black
+                                              : CheckColor.Green,
+                                      hinttextkey:
+                                          setapptext(key: 'key_select_city'),
+                                      textInputAction: TextInputAction.done,
+                                      onFieldSubmitted: (_) {},
+                                      onSaved: (value) {
+                                       },
+                                      onChanged: (value) {
+                                        setState(() {});
+                                      },
+                                    ), //municipality dropdown end
+
                                     //district/nahia
                                     formcardtextfield2(
                                       surveyList: nahiaList,
@@ -1013,4 +1136,3 @@ class ConfirmationStatus {
     return data;
   }
 }
-
